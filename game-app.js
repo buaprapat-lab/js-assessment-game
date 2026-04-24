@@ -10,6 +10,7 @@ const icon = {
   owner: "👦", // ใช้สัญลักษณ์เด็กผู้ชายธรรมดาเพื่อป้องกันปัญหาความกว้างตัวอักษรใน Terminal แล้วแมป row นั้นเพิ่มมาอีกช่อง
   unopened: "⬜️",
   opened: "⬛️",
+  exploded: "💥",
 };
 
 //----------------------------------------------------------
@@ -302,7 +303,7 @@ class Field {
           .map((tile, x) => {
             // หากตาย ให้แสดงสัญลักษณ์ที่จุดตายเป็นระเบิดแตก
             if (isDeath && x === this.playerX && y === this.playerY)
-              return "💥";
+              return icon.exploded;
             if (!isDeath && x === this.playerX && y === this.playerY)
               return icon.dog;
             if (
