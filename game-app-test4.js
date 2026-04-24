@@ -30,7 +30,7 @@ class Field {
 
   printMap() {
     console.clear();
-    console.log("=== FIND MY BONES (Strategy Edition) ===");
+    console.log("=== FIND MY BONES 𐂯 ੯·̀͡⬮ ===");
     console.log(
       `Bones: ${this.bonesCollected} | Angel: ${this.hasAngel ? "Active" : "None"} | Falls: ${this.stats.holesFallen}`,
     );
@@ -78,9 +78,10 @@ class Field {
         checkY >= 0 &&
         checkY < this.field.length
       ) {
+        // ใช้ this.field ในการดมกลิ่น เพราะมันคือข้อมูลจริงที่ยังไม่ได้เก็บ
         const tile = this.field[checkY][checkX];
 
-        // เช็คแค่ระเบิดและกระดูกเท่านั้น
+        // ถ้าเจอระเบืด ให้ทำการ random หยิบคำใบ้ 1 คำจาก Array ของทิศนั้นๆ
         if (tile === icon.bomb || tile === icon.bone) {
           const randomIndex = Math.floor(Math.random() * pos.hints.length);
           const selectedHint = pos.hints[randomIndex];
@@ -92,12 +93,10 @@ class Field {
     }
 
     if (bombDirs.length > 0)
-      console.log(
-        `[Warning] Smell gunpowder from... ${bombDirs.join(" and ")}`,
-      );
+      console.log(`[Warning] Smell gunpowder from.. ${bombDirs.join(" and ")}`);
     if (boneDirs.length > 0)
       console.log(
-        `[Hint] Smell something tasty from... ${boneDirs.join(" and ")}`,
+        `[Hint] Smell something tasty from.. ${boneDirs.join(" and ")}`,
       );
 
     if (bombDirs.length > 0 || boneDirs.length > 0) {
