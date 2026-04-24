@@ -1,242 +1,109 @@
-Find my bones (aka. Find my hats)
-skills req. -> Object-Oriented Programming (OOP) + basic Logic in JS
+🐶🦴 Find My Bones (Terminal Game)
+A JS Logic & OOP Playground
 
-ฺFIRST OF ALL:
-check if prompt-sync is working?
-package.json: ต้องมีชื่อ "prompt-sync"
-node_modules: ต้องมีโฟลเดอร์ชื่อ prompt-sync
+This is my personal project to practice Object-Oriented Programming (OOP) and JavaScript logic. I transformed the classic "Find Your Hat" game into a Turn-Based Strategy / Minesweeper-style puzzle featuring my dog finding its way back to the owner.
 
-วิธีรันเกม: node game-app.js
-
----
+Getting Started
+Prerequisite: npm install prompt-sync (Check package.json to ensure it's there).
+Run the game: node game-app.js (or whatever the main file is named).
+Controls: W (Up), A (Left), S (Down), D (Right).
 
 ---
 
----
+Game Mechanics: What's happening?
+🐶 The Dog (Me): Navigates the map to find the Owner.
+👦 The Owner (Goal): The ultimate destination. Finding him = Win!
+🦴 Bone: Collectibles. The more I get, the higher my rank at the end (1-4 = Normal, 5-8 = Good, 9+ = Super Dog).
 
-== Find my bones: what is this game about?
-น้องหมา 🐶 เดินในแผนที่ เปิดไอคอนแต่ละจุดในแผนที่แล้วเจอดังนี้แบบสุ่ม
-🦴 Bone = เก็บไปมอบให้เจ้าของ ยิ่งเก็บได้เยอะเลเวลจะขึ้นเยอะ จำนวนกระดูกเป็นตัววัด Level
-เมื่อจบเกม1-3 ชิ้น = Normal Dog, 5-8 ชิ้น = Good dog, 9+ = Super Dog
-💣 Bomb = game over
-🕳️ Hole - ตกหลุมจะสุ่มน้องหมาไปเกิดในจุดแผนที่ใหม่ อาจใกล้หรือไกลกว่าจุด goal
-🪽 Angel = นางฟ้าที่จะชุบชีวิตถ้าเจอ bomb ไม่ให้ game over
-🧒🏻 Owner = เจ้าของอยู่ที่จุดนึงของ map แบบสุ่ม เป็น goal สุดท้ายที่ต้องเดินไปหาเพื่อชนะ
-
-อื่นๆ
-unopened-map ⬜️
-opened-map ⬛️
+💣 Bomb: Instant Game Over (unless I have an Angel).
+🪽 Angel: A one-time shield against a bomb.
+🔳 Hole: Teleports the dog to a random safe location.
+Fog of War: Unexplored areas are ⬜️, explored trails are ⬛️.
 
 ---
 
----
+My Thought Process:
+Whenever I felt stuck staring at a blank screen, I realized I needed to break things down. Here is my mental model and how I translated human logic into JavaScript.
+
+##Step 0: The "Before Coding" Phase (Decomposition)
+Before writing a single line of JS, I had to ask myself: What exactly am I building?
+
+The Stage: A 2D grid (X, Y axis).
+
+The Actors: Hidden items (bombs, holes, bones, angels) vs. Visible items (the dog, the owner).
+
+The State: I need variables to remember the dog's current [y][x] position, bones collected, and if the angel shield is active.
+
+The Actions: WASD inputs to change X and Y coordinates. (Note to self: W means Y-1, S means Y+1, A means X-1, D means X+1).
+
+The Rules: Stepping on a tile triggers a specific event (switch...case logic).
+
+The Loop: The game must ask for input continuously until I win or die (while loop).
+
+##Step 1: The Setup & Toolkit
+Goal: Import tools and store reusable assets.
+
+I required prompt-sync for user inputs.
+
+Clean Code Decision: I stored all emojis in an icon object. If I want to change the dog emoji later, I only change it here, not in 300 different places.
+
+##Step 2: The Factory (Class Blueprint)
+Goal: Avoid global variable chaos.
+
+I created class Field. This acts as a blueprint. Every game state (map, positions, scores) is isolated inside this class. If I want to restart, I just instantiate a new Field().
+
+##Step 3: The Brain (Constructor)
+Goal: What does the game need to remember when a new round starts?
+
+It takes the generated field (the real map with all hidden items).
+
+Sets starting positions (playerX = 0, playerY = 0) and base stats.
+
+The "Aha!" Moment (Fog of War): I can't just print the real field or players will see the bombs. I created a dual-layer system:
+
+this.field = Data Layer (The truth).
+
+this.displayGrid = Presentation Layer (The illusion). I mapped over the real field and replaced everything with ⬜️ (except the owner) to show to the player.
+
+##Step 4: UI & "Dog Senses" (The View)
+Goal: Render the map and give the player a fighting chance.
+
+printMap(): Clears the console, prints the stats, and joins the 2D array into a string.
+
+Dynamic Rendering: The dog isn't hardcoded into the map. While rendering the grid, I added an if statement: If the current rendering x, y matches playerX, playerY, print the dog emoji here.
+
+##Step 5: The Controller
+Goal: Handle player input.
+
+askQuestion() takes the WASD input.
+
+Why does Up (W) mean Y - 1? Because in 2D Arrays, the top row is index 0. Moving "up" means going from index 1 to index 0.
+
+##Step 6: The Judge (Collision Logic)
+Goal: What happens when I step on something?
+
+processMove() checks this.field[y][x].
+
+I used a switch...case statement.
+
+Crucial Logic: When I collect a bone/angel, I engrave its icon permanently onto this.displayGrid (so the player sees it), but I erase it from this.field (so the dog doesn't smell it or collect it twice).
+
+##Step 7: Safety Nets (Teleports & Boundaries)
+Goal: Prevent bugs and unfair deaths.
+
+isOutOfBounds(): A math check. If Y < 0 or X > map width, Game Over.
+
+teleportPlayer(): When falling into a hole, I can't just teleport the dog randomly because it might land directly on a bomb (unfair!). I wrote a while(!isSafe) loop to keep generating random X, Y coordinates until it lands on an empty, safe tile.
+
+##Step 8: The Grand Reveal (Endings)
+Goal: Provide closure.
+
+Whether it's a win (winGame) or a loss (endGame), I flip isGameOver = true to break the game loop.
+
+revealFinalMap(): If the player dies, they deserve to know where the bombs were. I overlay the hidden items from this.field onto the screen and replace the dog with an explosion 💥 at the death coordinates.
+
+Finally, the game calculates the title (Normal/Good/Super Dog) based on the bonesCollected state.
 
 ---
 
-เงื่อนไข
-
-1: Understanding the Game State (ว่าต้องเก็บข้อมูลอะไรบ้าง?)
-สมองของเกมที่ต้องจำค่าตลอดเวลา
-Map Data: ตาราง 2D Array ที่เก็บไอคอนต่างๆ
-Player Position: ค่า position x และ y ปัจจุบันของน้องหมา
-Inventory/Status: จำนวนกระดูกที่เก็บได้ (bones), สถานะนางฟ้า (hasAngel), และสถานะเกมว่าจบหรือยัง (isGameOver)
-
-2: Input & Movement Logic (เดินยังไง?)
-รับ Input (WSAD) แล้วไปเปลี่ยนค่าแกน x หรือ y
-ก่อนจะขยับจริงต้องเช็คก่อนว่า ออกนอกแมปไหม? ถ้าออกต้อง Game over ทันที isOutOfBounds()
-
-3: Collision Logic (เหยียบแล้วเจออะไร?)
-check-in question: เมื่อเดินไปที่จุดใหม่ ต้องใช้ switch-case หรือ if-else เช็คคอนเทนต์ในช่องนั้น:
-ถ้าเจอ Owner: ชนะ
-ถ้าเจอ Bone: bones++ และเปลี่ยนช่องนั้นเป็น opened-map
-ถ้าเจอ Bomb: เช็ค hasAngel ถ้ามีให้รอด (ใช้แต้มบุญหมดไป) ถ้าไม่มีคือ Game Over
-ถ้าเจอ Hole: สุ่มค่า x, y ใหม่ให้น้องหมาทันที (Teleport)
-ในตอนที่ teleportPlayer() ทำงาน ให้ใส่ console.log บอก User ด้วย เดี๋ยวงงว่าเกิดอะไรขึ้น
-
-4: Map presentation
-เริ่มต้น ⬜️
-ใน this.field ยังคงมี 💣, 🦴 ซ่อนอยู่
-ใช้ .map() สร้าง displayMap และเขียนเงื่อนไขดักไว้ว่า "ถ้าไม่ใช่หมา ไม่ใช่เจ้าของ และยังไม่เคยเดินผ่าน ให้โชว์ ⬜️ ทั้งหมด"
-
-ระหว่างเกม จะใช้ opened-map (⬛️) ทับจุดที่เคยเดินผ่านแล้ว
-พอตอนน้องหมาเดินไปเหยียบ ฟังก์ชัน processMove() จะไปอ่านค่าจาก this.field ที่เก็บของจริงไว้ ทำให้ระบบคำนวณถูกว่าโดนระเบิดหรือได้กระดูก และพอเดินออกไป ช่องนั้นก็จะถูกเปลี่ยนเป็นรอยเท้า ⬛️
-
-5: คำสั่ง
-user ควบคุม map ด้วย W/A/S/D
-W = บน, A = ซ้าย, S = ล่าง, D = ขวา เพื่อให้รู้สึกคุ้นเคยเหมือนการควบคุมตัวละครในเกมอื่นๆ
-
-พิมพ์ quit -> ออกจากเกม (Ctrl+C)
-พิมพ์ re -> restart map ใหม่
-
-6: Stats
-แถบสถานะนับ bone, angel, hole ว่าตกไปกี่ครั้ง, เจอ angel
-จบเกมมีสรุป stats เหล่านี้ และ title ว่าเป็น normal / good / super dog
-
-7: Game Journey = Strategy + Dog senses
-แนวเกมเป็น Turn-Based Strategy (แนววางแผนสลับตาเดิน) ผสมกับ Minesweeper
-มี Fog of War (ซ่อนแมป) + ระบบคำใบ้ (Hint System)
-ทำให้การพิมพ์ W, A, S, D ทีละก้าว เป็นการ วางแผน logic แทนที่การสุ่มดวง
-
-Dog Senses คือคำใบ้ทิศทาง + ระบบเตือนภัย (Hints)
-สร้างฟังก์ชันให้ระบบเช็ครอบๆ ตัวน้องหมา (บน ล่าง ซ้าย ขวา) ว่ามีอะไรซ่อนอยู่ไหม แล้วโชว์ข้อความเตือนก่อนที่ User จะเลือกเดิน
-
-ทิศขึ้น (W / North)
-hints: ["Uptown", "12 o'clock", "The High Ground"],
-ทิศลง (S / South)
-hints: ["Underground", "6 o'clock", "The Basement"],
-ทิศซ้าย (A / West)
-hints: ["Sunset Beach", "9 o'clock", "The West Coast"],
-ทิศขวา (D / East)
-hints: ["Sushi Restaurant", "3 o'clock", "The East End"],
-
-8:
-Safe Zone (ระยะปลอดภัย): ในฟังก์ชัน generateField ระยะ 3 ก้าวแรกจากจุด (0,0) ไม่มีระเบิดและหลุม 100% ให้ผู้เล่นได้เปิดแมปตั้งตัวก่อน
-
-9: สร้างแผนที่ขึ้นมา 2 แผ่นซ้อนกัน
-this.field (Data Layer): เก็บข้อมูลของจริงที่ซ่อนอยู่
-this.displayGrid: เก็บภาพหน้าจอที่เราจะพิมพ์ให้ผู้เล่นดู
-เมื่อเดินไปเก็บ Bone, Angel เราจะลบของออกจาก this.field (เพื่อไม่ให้ดมกลิ่นเจอซ้ำและกันเก็บซ้ำ) แต่เราจะสลักไอคอนนั้นไว้บน this.displayGrid ถาวรแทน
-
-10: ตายแล้วเฉลยแมป: ตอนจบเกม (Game Over) เพิ่มโค้ดเปิดแมปที่เหลือทั้งหมดให้ดูด้วยว่าจริงๆ แล้วระเบิดซ่อนอยู่ไหนบ้าง จะได้หายคาใจ
-
-อื่นๆ
-คำสั่ง restart, quit
-คำสั่งลับสำหรับคนสร้างเอาไว้เช็ค map โดยไม่ต้องเล่นให้จบเกม "magic"
-
----
-
----
-
----
-
-To start from scratch:
-
-=== step 0: ต้องมีอะไรบ้าง? ===
-ต้องมีฉาd
-เป็นตารางกริด (ซ้าย ขวา บน ล่าง) -> 2D Array
-มีของซ่อนอยู่: ระเบิด หลุม กระดูก นางฟ้า / โชว์อยู่: น้องหมา เจ้าของ
-ต้องจำตำแหน่งปัจจุบันน้องหมาว่าอยู่ที่ไหน --> แกน x, y
-ต้องจำ objects ที่เก็บได้คือ bone, angel: active/none --> สร้างตัวแปรมารับค่าคะแนนที่เก็บได้
-
-ต้องมีแอคชั่น: รับคำสั่ง W, A, S, D เพื่อเดิน --> สัมพันธ์กับ x, y -1, 0, 1
-w[0,1]
-s[0,-1]
-a[-1,0]
-d[1,0]
-
-ต้องมีกฎ:
-bone: คะแนน +1,
-angel: ได้สถานะป้องกันระเบิด 1 ครั้ง
-bomb: ถ้ามีนางฟ้า -> รอดและนางฟ้าหายไป, ถ้าไม่มี -> แพ้ทันที
-hole: สุ่มตำแหน่งหมาไปที่ใหม่ ต้องป็รที่ isSafe
---> ตรงนี้ต้องใช้ switch...case หรือ if...else เพื่อดักว่า [y][x]ปัจจุบันมันตรงกับไอคอนอะไร
-
-ต้องวนลูป: เกมต้องถามซ้ำๆ จนกว่าจะตายหรือชนะ --> while loop
-
-=== step 1: set up ===
-
-เกมนี้ต้องเล่นใน Terminal ต้องมีตัวรับคำสั่งพิมพ์จากคีย์บอร์ดก่อน
-const prompt = require("prompt-sync")({ sigint: true });
-
-เอาไอคอนที่ใช้ซ้ำบ่อยๆมาเก็บไว้ Object แล้วตั้วชื่อไว้เรีดกใช้
-const icon = {
-dog: "🐶",
-bone: "🦴",
-bomb: "💣",
-// ...
-};
-
-++ clean code -> ถ้าอนาคตจะก็มาแก้ที่ไฟล์ตรงนี้จุดเดียว
-
-=== step 2: โรงงานผลิตเกม ===
-เกมนี้มีตัวแปรเยอะ (ตำแหน่งหมา, กระดูกที่เก็บได้, สถานะเกม) ถ้าปล่อยเป็น Global Variables น่าจะพังง่าย --> ต้องสร้าง class Field ขึ้นมาเป็นกล่องโรงงานเกมที่เก็บข้อมูลทุกอย่างของเกมตาหนึ่งๆ ไว้
-class = Blueprint -> สร้างไว้ 1 อัน เพื่อเอาไปปั๊มสร้างด่านกี่ด่านก็ได้ ข้อมูลของด่านแรกจะไม่ตีกับด่านที่สอง
-
-class Field {
-// ระบบทุกอย่างจะถูกเขียนในปีกกานี้
-}
-
-=== step 3: เซ็ตค่าเริ่มต้นตอนเริ่มเกม The Constructor ===
-เมื่อเปิดเกมขึ้นมา 1 ตา (ตอนที่มีการสร้างเกมใหม่) เกมจะต้องจดจำอะไรไว้บ้างในสมองเกม?
-
-ต้องจำแผนที่ (รับค่า field เข้ามาที่เป็นแผนที่จริงเห็นไอเทอมทุกอย่าง)แต่ถ้าโชว์แผนที่ field ให้คนเล่นดูตรงๆ ก็ไม่สนุก ให้ปิดเป็นช่องว่างๆ (unopened) ไว้
-หมาเกิดที่ไหน? (ให้ที่่ซ้ายบนสุด X=0, Y=0)
-คะแนนเริ่มต้น? (bone = 0, angle = false, hole = 0, moves = 0)
-
-constructor(field) {
-this.field = field; // แผนที่จริง (สมองเกมเก็บไว้)
-this.playerX = 0; // หมาแกน X
-this.playerY = 0; // หมาแกน Y
-this.bonesCollected = 0;
-this.hasAngel = false;
-this.isGameOver = false;
-
-    this.stats = { holesFallen: 0, bombsHit: 0, angelsFound: 0, totalMoves: 0 };
-
-    // ถ่ายเอกสารแผนที่ แล้วเปลี่ยนทุกอย่างให้เป็นช่องว่าง (ยกเว้นรูปเจ้าของ)
-    this.displayGrid = this.field.map((row) =>
-      row.map((tile) => (tile === icon.owner ? icon.owner : icon.unopened)),
-    );
-
-    // ประทับตรารอยเท้าไว้ที่จุดเริ่มต้น (0,0) บนแผ่นถ่ายเอกสาร
-    this.displayGrid[0][0] = icon.opened;
-
-}
-
-ืnotes:
-this. ใน Class = "ของเกมตานี้" เช่น this.playerX = 0 แปลว่า แกน X ของเกมตานี้ ให้เริ่มที่ 0
-
-displayGrid ต้องมีเพราะ การ Fog of war (ซ่อนแมป) ไม่ใช่การลบข้อมูล แต่เป็นการมีแผนที่ 2 layers เลเยอร์จริง(this.field)เอาไว้คำนวณ เลเยอร์หลอก(this.displayGrid)เอาไว้โชว์
-
-จบขั้นตอนนี้ มันจำได้แล้วว่าแมปขนาดเท่าไหร่ และหมาเกิดที่ไหน
-
-=== step 4: หน้าตา UI display ===
-(ส่วน printMap() และ checkDogSenses())
-
--ต้องเอาตาราง displayGrid (แผ่นที่ถ่ายเอกสารซ่อนระเบิดไว้แล้ว) มาวาดลงจอ Terminal
--แต่ใน displayGrid ไม่มีรูปหมา เพราะหมามันขยับตลอดเวลา ตอนที่โค้ดวาดแมป ต้องเขียนเงื่อนไขดักไว้ว่า ถ้ากำลังวาดมาถึงช่องที่พิกัด X, Y ที่ตรงกับตำแหน่งหมาพอดี ให้วาดรูปหมาทับลงไป
-
-printMap()....
-
-ก่อนจะให้คนเล่นกดเดิน ให้เกมเหมืแน Puzzle ต้องเขียนฟังก์ชันเช็คช่องรอบๆ ตัวหมา (บน ล่าง ซ้าย ขวา) ในแมปจริง (this.field)ออกมาว่า ถ้าเจอระเบิด ก็ให้มันสุ่มหยิบคำใบ้ (เช่น Uptown, 6 o'clock) มาปริ้นท์บอก user
-
-..this.checkDogSenses();
-
-=== step 5: The Controller ===
-(โค้ดส่วน askQuestion())
-
-ต้องใช้ prompt ถามคนเล่นว่าจะไปที่ไหนไหน
-และเปิดรับคำสั่ง restart, quit, สูตรโกง magic
-
-สงสัยว่าทำไมแกน Y กดขึ้นไปดันเป็นค่า -
-เหตุผลเพราะ Array ในคอมพิวเตอร์มันเริ่มจากแถวบนสุดลงล่าง
-
-แถวที่ 0 (บนสุด): [⬜️, ⬜️, ⬜️]
-แถวที่ 1 (ตรงกลาง): [⬜️, 🐶, ⬜️]
-แถวที่ 2 (ล่างสุด): [⬜️, ⬜️, ⬜️]ถ้าหมาอยู่แถว 1 (y=1) แล้วกด เดินขึ้น มันต้องย้ายไปแถว 0 ดังนั้น 1 - 1 = 0
-
-=== step 6: The Logic - processMove ===
-มันเดินชนกำแพงทะลุแมปไปรึเปล่า? ถ้าทะลุ --> game over แต่ถ้าไม่ทะลุ --> ต้องดูไอเทมที่เหยียบอยู่ ตาราง this.field
-
-ถ้าเจอ เจ้าของ -> ประกาศชัยชนะ!
-ถ้าเจอ ระเบิด -> เช็คก่อนว่ามีนางฟ้าไหม? ถ้ามีก็หักแต้มบุญแล้วรอด ถ้าไม่มี --> game over
-ถ้าเจอ กระดูก -> บวกคะแนน
-
-processMove()...
-
-=== step 7: Teleport & OutOfBounds ===
-จะรู้ได้ไงว่ามันตกขอบ? --> เขียนสูตรคณิตศาสตร์เช็ค (X ต้องไม่ต่ำกว่า 0 และไม่เกินความกว้างแมป)
-ถ้าตกหลุมล่ะ -> ต้องสุ่มพิกัดใหม่ให้หมา โดยสุ่มเขียนลูปสุ่มไปเรื่อยๆ จนกว่าจะได้ 'ช่องที่ปลอยภัย" ที่ไม่ใช่ระเบิดหรือหลุมอีก
-
-isOutOfBounds()...
-
-=== step 8: The Endings & Reveal ===
-
-เกมจบมี 2 แบบคือ Win กับ Lose
-สั่ง this.isGameOver = true เพื่อไปหยุดลูปหลักของเกม และมีฟังก์ชัน เปิดไพ่ Reveal Final Map ที่เอาแมปจริงมาผสมกับแมปโชว์จอให้ดูเป็นบุญตา
-
-winGame()...
-endGame(message)...
-
-สรุป stats ท้ายเกม
-ฟังค์ชัน restart เริ่มใหม่ได้ระหว่างเกม
+End of notes. Keep practicing! Happy Coding.
