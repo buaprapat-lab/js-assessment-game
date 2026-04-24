@@ -34,12 +34,12 @@ Player Position: ค่า position x และ y ปัจจุบันขอ
 Inventory/Status: จำนวนกระดูกที่เก็บได้ (bones), สถานะนางฟ้า (hasAngel), และสถานะเกมว่าจบหรือยัง (isGameOver)
 
 2: Input & Movement Logic (เดินยังไง?)
-รับ Input (U, D, L, R) แล้วไปเปลี่ยนค่าแกน x หรือ y
+รับ Input (WSAD) แล้วไปเปลี่ยนค่าแกน x หรือ y
 ก่อนจะขยับจริงต้องเช็คก่อนว่า ออกนอกแมปไหม? ถ้าออกต้อง Game over ทันที isOutOfBounds()
 
 3: Collision Logic (เหยียบแล้วเจออะไร?)
 check-in question: เมื่อเดินไปที่จุดใหม่ ต้องใช้ switch-case หรือ if-else เช็คคอนเทนต์ในช่องนั้น:
-ถ้าเจอ Owner: ชนะ!
+ถ้าเจอ Owner: ชนะ
 ถ้าเจอ Bone: bones++ และเปลี่ยนช่องนั้นเป็น opened-map
 ถ้าเจอ Bomb: เช็ค hasAngel ถ้ามีให้รอด (ใช้แต้มบุญหมดไป) ถ้าไม่มีคือ Game Over
 ถ้าเจอ Hole: สุ่มค่า x, y ใหม่ให้น้องหมาทันที (Teleport)
